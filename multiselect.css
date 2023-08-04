@@ -1,0 +1,333 @@
+* {
+  box-sizing: border-box;
+}
+
+.MultiSelectContainer {
+  position: relative;
+}
+
+.PopoverBtn {
+  position: relative;
+  border: 1px solid #1F7AE0;
+  background: #FFF;
+  width: 241px;
+  height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  /* padding: 13.5px 0 13.5px; */
+  padding: 0;
+}
+
+.PopoverBtn:hover img {
+  background-color: #DDE0E4;
+  border-radius: 4px;
+}
+
+.PopoverBtn .SelectOptions {
+  color: #535B62;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: Poppins;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  padding-left: 12px;
+}
+
+.PopoverBtn .DropdownIconCont {
+  height: 100%;
+  width: calc(12px + 20px + 12px);
+  position: absolute;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(90deg, #ffffff00 0%, #fff 50%, #fff 75%, #fff 100%);
+}
+
+.PopoverBtn .DropdownIconCont img {
+  width: 20px;
+  height: 20px;
+}
+
+.PopoverContent {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  padding: 16px 0px 0 16px;
+  width: 305px;
+  border-radius: 8px;
+  background: #FFF;
+  box-shadow: 0px 1px 10px 0px rgba(0, 0, 0, 0.15);
+  margin-bottom: 10px;
+}
+
+.PopoverContent * {
+  user-select: none;
+}
+
+.PopoverContent.Show {
+  display: block;
+}
+
+.Backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 999;
+}
+
+.PopoverContent.Show+.Backdrop {
+  display: block;
+}
+
+.ListHeader {
+  padding-right: 16px;
+}
+
+.ChipsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ChipsList.Outer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: auto hidden;
+  scrollbar-width: thin;
+}
+
+.ChipsList.Outer::-webkit-scrollbar-track {
+  background: #F0F1FC;
+  border-radius: 4px;
+  height: 4px;
+}
+
+
+.ChipsList:not(.Outer) .VItem:last-child {
+  margin-bottom: 16px;
+}
+
+.ChipsList .VItem {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+  min-height: 24px;
+  max-height: 24px;
+  border-radius: 2px;
+  background: #444FD322;
+  color: #444FD3;
+  font-family: Poppins;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  padding: 2px 4px;
+}
+
+.ChipsList.Outer .VItem {
+  white-space: pre;
+}
+
+.ChipsList.Outer .VItem:first-child {
+  margin-left: 12px;
+}
+
+.ChipsList.Outer .VItem:last-child {
+  margin-right: calc(12px + 20px + 12px);
+}
+
+.ChipsList .VItemCrossIcon {
+  cursor: pointer;
+}
+
+.ChipsList .ChipOverflow {
+  position: relative;
+  background: #F0F1FC;
+  border-radius: 50%;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* aspect-ratio: 1; */
+}
+
+.Tooltip {
+  display: none;
+  position: absolute;
+  /* background-color: rgba(0, 0, 0, 0.8); */
+  border-radius: 2px;
+  background: #2F363F;
+  color: white;
+  padding: 8px;
+  font-size: 14px;
+  white-space: pre-line;
+  overflow: hidden;
+  top: 0;
+  /* right: -110px; */
+  /* width: 100px; */
+  z-index: 1001;
+  overflow: visible;
+  font-family: Poppins;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.Tooltip::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: -5px;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent rgba(0, 0, 0, 0.8) transparent transparent;
+  /* transform: rotate(270deg); */
+}
+
+.SearchPanel {
+  position: relative;
+}
+
+.SearchPrefix {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+}
+
+.SearchInput {
+  width: 100%;
+  display: flex;
+  height: 36px;
+  padding: 12px 0px 12px calc(12px + 14px + 12px);
+  align-items: center;
+  gap: 12px;
+  border-radius: 4px;
+  border: 1px solid #DDE0E4;
+  background: #FFF;
+  margin-bottom: 16px;
+  color: #81878C;
+  font-family: Poppins;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  outline: unset;
+}
+
+.SearchInput:focus {
+  border-color: #444FD3;
+}
+
+.Loader {
+  display: none;
+  position: absolute;
+  top: 20%;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #444FD3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  right: 12px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+
+.MultiSelectList {
+  scrollbar-width: thin;
+}
+
+.MultiSelectList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.MultiSelectList .VItem {
+  cursor: pointer;
+  padding: 8px 0 8px 8px;
+  width: calc(100% - 8px);
+  color: #535B62;
+  font-family: Poppins;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: left;
+}
+
+.MultiSelectList .VItem:hover {
+  background: #F0F1FC;
+  border-radius: 2px;
+}
+
+.ListFooter {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  padding: 6px 16px;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: -16px;
+  width: calc(100% + 16px);
+  background: #F8F9FB;
+  border-radius: 0px 0px 8px 8px;
+}
+
+.ListFooter button {
+  cursor: pointer;
+  color: #1F7AE0;
+  font-family: Poppins;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+  background: transparent;
+  border: 0;
+}
+
+.ListFooter button:is(.Inactive) {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.NoItemsMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  color: #535B62;
+  text-align: center;
+  font-family: Poppins;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  padding: 16px 16px 16px 0px;
+}

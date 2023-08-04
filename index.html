@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Virtualized Dropdown</title>
+    <link rel="stylesheet" href="./multiselect.css" />
+    <script type="text/javascript" src="./vlist.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  </head>
+
+  <body style="display: flex; flex-wrap: wrap; gap: 50px; margin: 50px">
+    <div class="MultiSelectContainer_1"></div>
+    <div class="MultiSelectContainer_2"></div>
+    <div class="MultiSelectContainer_3"></div>
+    <div class="MultiSelectContainer_4"></div>
+    <div class="MultiSelectContainer_5"></div>
+    <div class="MultiSelectContainer_6"></div>
+    <div class="MultiSelectContainer_7"></div>
+    <div class="MultiSelectContainer_8"></div>
+    <div class="MultiSelectContainer_9"></div>
+    <div class="MultiSelectContainer_10"></div>
+
+    <button onclick="GetItems1()">Get Values 1</button>
+    <!-- <button onclick="GetItems2()">Get Values 2</button> -->
+
+    <script type="text/javascript" src="./multiselect.js"></script>
+
+    <script>
+      // Max Limit = 100000
+      const itemList1 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList2 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList3 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList4 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList5 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList6 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList7 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList8 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList9 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      const itemList10 = Array.from({ length: 100000 }, (_, i) => {
+        return {
+          index: i,
+          label: `Item ${i}`,
+          value: i,
+        }
+      })
+
+      
+      const multiSelect1 = new MultiSelect({
+        items: itemList1,
+        rootElement: ".MultiSelectContainer_1",
+      })
+      const multiSelect2 = new MultiSelect({
+        items: itemList2,
+        rootElement: ".MultiSelectContainer_2",
+      })
+      const multiSelect3 = new MultiSelect({
+        items: itemList3,
+        rootElement: ".MultiSelectContainer_3",
+      })
+      const multiSelect4 = new MultiSelect({
+        items: itemList4,
+        rootElement: ".MultiSelectContainer_4",
+      })
+      const multiSelect5 = new MultiSelect({
+        items: itemList1,
+        rootElement: ".MultiSelectContainer_5",
+      })
+      const multiSelect6 = new MultiSelect({
+        items: itemList6,
+        rootElement: ".MultiSelectContainer_6",
+      })
+      const multiSelect7 = new MultiSelect({
+        items: itemList7,
+        rootElement: ".MultiSelectContainer_7",
+      })
+      const multiSelect8 = new MultiSelect({
+        items: itemList8,
+        rootElement: ".MultiSelectContainer_8",
+      })
+      const multiSelect9 = new MultiSelect({
+        items: itemList9,
+        rootElement: ".MultiSelectContainer_9",
+      })
+      const multiSelect10 = new MultiSelect({
+        items: itemList10,
+        rootElement: ".MultiSelectContainer_10",
+      })
+
+
+      function GetItems1() {
+        console.info("Get Items 1 :", multiSelect1.selectedItems)
+      }
+
+    </script>
+  </body>
+</html>
