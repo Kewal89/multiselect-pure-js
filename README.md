@@ -4,10 +4,14 @@ Multi Select with Virtual List
 
 ## TODO
 
-- [x] Popup Issue
+- [x] Popup Overflow Issue
+- [ ] Placeholder Text Configs
 - [ ] Disable Field
-- [ ] Prefill Selected Items Ouside & Inside
-- [ ] Label Combination Support. // Very Lame Requirement
-- [ ] Label Ellipse
+- [ ] Disable Individual Options
+- [ ] Prefill Selected Options Ouside & Inside / Default Values
+- [ ] Custom Render Label.
+- [ ] Label Ellipsis
 - [ ] Label Title
-- [ ] Data Handling
+- [ ] Events like onChange, onClose, onOpen
+- [ ] Getters like Get Fields, Get Disable Fields.
+- [ ] Setters like Set Fields, Set Disable Fields.
