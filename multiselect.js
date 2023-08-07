@@ -549,7 +549,7 @@ MultiSelect.prototype.setDisabled = function (isDisabled) {
   this.popoverBtn.classList.toggle("Disabled", isDisabled)
 }
 
-MultiSelect.prototype.setFieldDisabled = function (fieldValues, isDisabled = true) {
+MultiSelect.prototype.setDisabledFields = function (fieldValues, isDisabled = true) {
   if (!Array.isArray(fieldValues)) {
     fieldValues = [fieldValues]
   }
@@ -561,4 +561,8 @@ MultiSelect.prototype.setFieldDisabled = function (fieldValues, isDisabled = tru
   }
 
   this.virtualList.updateItems(this.unselectedItems)
+}
+
+MultiSelect.prototype.getDisabledFields = function () {
+  return this.disabledFields
 }
