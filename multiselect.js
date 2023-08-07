@@ -2,7 +2,7 @@
  * Author:        Kewal Rathod
  * Created:       04.08.2023
  * License:       MIT
- * Description:   A simple, useless, lightweight, customizable, searchable, multi-select dropdown component build with pure JavaScript and CSS. * 
+ * Description:   A simple, useless, lightweight, customizable, searchable, multi-select dropdown component build with pure JavaScript and CSS. *
  **/
 
 "use strict"
@@ -17,6 +17,8 @@ function MultiSelect(props) {
   this.mode = props.mode || "multi"
   this.labelKey = props.labelKey || "label"
   this.valueKey = props.valueKey || "value"
+  this.placeholder = props.placeholder || "Select Options"
+  this.disabled = props.disabled || false
 
   // Internal Props Settings
   this.chipCollapse = true
@@ -39,6 +41,8 @@ MultiSelect.prototype.generateDOM = function () {
   this.container = document.createElement("div")
   this.container.classList.add("MultiSelectContainer")
 
+  if (this.disabled) this.container.classList.add("Disabled")
+
   // Outer Trigger Button
   const button = document.createElement("button")
   button.type = "button"
@@ -46,7 +50,7 @@ MultiSelect.prototype.generateDOM = function () {
 
   const selectOptions = document.createElement("div")
   selectOptions.classList.add("SelectOptions")
-  selectOptions.textContent = "Select Options"
+  selectOptions.textContent = this.placeholder
   button.appendChild(selectOptions)
 
   const downArrowCont = document.createElement("div")
@@ -179,6 +183,8 @@ MultiSelect.prototype.setupEventListeners = function () {
   // Handle click events using event delegation
 
   this.rootContainer.addEventListener("click", function (event) {
+    if (self.disabled) return 
+
     console.info("event.target", event.target.classList, event.target.parentNode, event.target.parentNode.parentNode)
     if (event.target.classList.contains("ChipOverflow")) {
       const isOuterChip = event.target.classList.contains("OuterFlow")
@@ -190,6 +196,7 @@ MultiSelect.prototype.setupEventListeners = function () {
   })
 
   this.popperContainer.addEventListener("click", function (event) {
+    if (self.disabled) return
     console.info("event.target", event.target.classList, event.target.parentNode, event.target.parentNode.parentNode)
 
     if (event.target.classList.contains("ChipOverflow")) {
@@ -300,7 +307,7 @@ MultiSelect.prototype.handleBackDrop = function () {
 
   if (this.selectedItems.length === 0) {
     const outerText = document.createElement("div")
-    outerText.textContent = "Select Options"
+    outerText.textContent = this.placeholder
     outerText.classList.add("SelectOptions")
     this.popoverBtn.appendChild(outerText)
   } else {
@@ -516,4 +523,11 @@ MultiSelect.prototype.handleNoItems = function () {
       this.selectAllBtn.classList.remove("Inactive")
     }
   }
+}
+
+// Events
+
+MultiSelect.prototype.setDisabled = function (isDisabled) {
+  this.disabled = isDisabled
+  this.rootContainer.classList.toggle("Disabled", isDisabled)
 }

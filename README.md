@@ -5,13 +5,18 @@ Multi Select with Virtual List
 ## TODO
 
 - [x] Popup Overflow Issue
-- [ ] Placeholder Text Configs
-- [ ] Disable Field
+- [x] Placeholder Text Configs
+- [x] Disable Field
 - [ ] Disable Individual Options
 - [ ] Prefill Selected Options Ouside & Inside / Default Values
 - [ ] Custom Render Label.
 - [ ] Label Ellipsis
 - [ ] Label Title
-- [ ] Events like onChange, onClose, onOpen
-- [ ] Getters like Get Fields, Get Disable Fields.
-- [ ] Setters like Set Fields, Set Disable Fields.
+- [ ] onChange Event.
+- [ ] onClose Event.
+- [ ] onOpen Event.
+- [ ] Get Fields.
+- [ ] Set Fields.
+- [ ] Get Disabled Individual Fields.
+- [ ] Set Disable Individual Fields.
+- [x] Set Disable Select Field.

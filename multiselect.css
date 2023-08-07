@@ -20,9 +20,14 @@
   padding: 0;
 }
 
-.PopoverBtn:hover img {
+.MultiSelectContainer:not(.Disabled) .PopoverBtn:hover img {
   background-color: #DDE0E4;
   border-radius: 4px;
+}
+
+
+.MultiSelectContainer.Disabled .PopoverBtn {
+  cursor: not-allowed;
 }
 
 .PopoverBtn .SelectOptions {
