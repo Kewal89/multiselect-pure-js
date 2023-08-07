@@ -385,7 +385,7 @@ MultiSelect.prototype.handleItemUnselection = function (element) {
 MultiSelect.prototype.renderLists = function () {
   const currentScrollPosition = this.unselectedItemsContainer.scrollTop
   const firstVisibleIndex = Math.floor(currentScrollPosition / 40)
-  console.info("Trigger Rendering :", firstVisibleIndex, currentScrollPosition)
+  console.info("Trigger Rendering :", this.disabledFields)
 
   this.virtualList = new VirtualList({
     root: this.popoverContent,

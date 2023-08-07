@@ -18,5 +18,5 @@ Multi Select with Virtual List
 - [ ] Get Fields.
 - [ ] Set Fields.
 - [ ] Get Disabled Individual Fields.
-- [ ] Set Disable Individual Fields.
+- [x] Set Disable Individual Fields.
 - [x] Set Disable Select Field.
