@@ -19,13 +19,16 @@ function MultiSelect(props) {
   this.valueKey = props.valueKey || "value"
   this.placeholder = props.placeholder || "Select Options"
   this.disabled = props.disabled || false
+  this.disabledFields = props.disabledFields || []
 
   // Internal Props Settings
   this.chipCollapse = true
 
   // Array to Store Selected & Unselected Items.
   this.selectedItems = []
-  this.unselectedItems = this.itemList.slice()
+  this.unselectedItems = Array.isArray(this.itemList) ? this.itemList.slice() : []
+  // TODO: Handle This Error Properly As It May Crash Rest of The Code.
+  if (!Array.isArray(this.itemList)) console.error("Item List should be an array.", this.root)
 
   this.initialize()
 }
@@ -41,12 +44,12 @@ MultiSelect.prototype.generateDOM = function () {
   this.container = document.createElement("div")
   this.container.classList.add("MultiSelectContainer")
 
-  if (this.disabled) this.container.classList.add("Disabled")
-
   // Outer Trigger Button
   const button = document.createElement("button")
   button.type = "button"
   button.classList.add("PopoverBtn")
+
+  if (this.disabled) button.classList.add("Disabled")
 
   const selectOptions = document.createElement("div")
   selectOptions.classList.add("SelectOptions")
@@ -183,7 +186,7 @@ MultiSelect.prototype.setupEventListeners = function () {
   // Handle click events using event delegation
 
   this.rootContainer.addEventListener("click", function (event) {
-    if (self.disabled) return 
+    if (self.disabled) return
 
     console.info("event.target", event.target.classList, event.target.parentNode, event.target.parentNode.parentNode)
     if (event.target.classList.contains("ChipOverflow")) {
@@ -218,7 +221,7 @@ MultiSelect.prototype.setupEventListeners = function () {
 
   // Handle Search Functionality
   this.searchInput.addEventListener("input", function () {
-    self.onSearch()
+    self.onSearch(true)
   })
 }
 
@@ -320,6 +323,11 @@ MultiSelect.prototype.handleBackDrop = function () {
 MultiSelect.prototype.handleItemSelection = function (element) {
   const selectedItemText = element.textContent.trim()
   const selectedItemIndex = this.unselectedItems.findIndex((x) => x[this.labelKey] === selectedItemText)
+  const selectedItemValue = this.unselectedItems[selectedItemIndex][this.valueKey]
+
+  if (this.disabledFields.includes(selectedItemValue)) {
+    return // Disable selection
+  }
 
   if (selectedItemIndex !== -1) {
     // Move Item From Unselected to Selected Items List
@@ -375,21 +383,30 @@ MultiSelect.prototype.handleItemUnselection = function (element) {
 }
 
 MultiSelect.prototype.renderLists = function () {
+  const currentScrollPosition = this.unselectedItemsContainer.scrollTop
+  const firstVisibleIndex = Math.floor(currentScrollPosition / 40)
+  console.info("Trigger Rendering :", firstVisibleIndex, currentScrollPosition)
+
   this.virtualList = new VirtualList({
-    root: this.rootContainer,
+    root: this.popoverContent,
     container: this.unselectedItemsContainer,
     h: this.height,
     itemHeight: 40,
     items: this.unselectedItems,
     generatorFn: (index, row) => {
-      var el = document.createElement("div")
+      const value = row[this.valueKey]
+
+      let el = document.createElement("div")
       el.classList.add("VItem")
       el.innerHTML = row[this.labelKey]
       el.setAttribute("data-index", index)
-      el.setAttribute("data-value", row[this.valueKey])
+      el.setAttribute("data-value", value)
+      if (this.disabledFields.includes(value)) el.setAttribute("disabled", true)
       return el
     },
   })
+  this.unselectedItemsContainer.scrollTop = firstVisibleIndex * 40
+
   this.virtualList.container.classList.add("VirtualListContainer")
 
   this.handleNoItems()
@@ -455,14 +472,14 @@ MultiSelect.prototype.clearAllItems = function () {
 }
 
 MultiSelect.prototype.showLoader = function () {
-  const loader = this.rootContainer.querySelector(".Loader")
+  const loader = this.popperContainer.querySelector(".Loader")
   if (loader) {
     loader.style.display = "block"
   }
 }
 
 MultiSelect.prototype.hideLoader = function () {
-  const loader = this.rootContainer.querySelector(".Loader")
+  const loader = this.popperContainer.querySelector(".Loader")
   if (loader) {
     loader.style.display = "none"
   }
@@ -529,5 +546,19 @@ MultiSelect.prototype.handleNoItems = function () {
 
 MultiSelect.prototype.setDisabled = function (isDisabled) {
   this.disabled = isDisabled
-  this.rootContainer.classList.toggle("Disabled", isDisabled)
+  this.popoverBtn.classList.toggle("Disabled", isDisabled)
+}
+
+MultiSelect.prototype.setFieldDisabled = function (fieldValues, isDisabled = true) {
+  if (!Array.isArray(fieldValues)) {
+    fieldValues = [fieldValues]
+  }
+
+  if (isDisabled) {
+    this.disabledFields = [...new Set([...this.disabledFields, ...fieldValues])]
+  } else {
+    this.disabledFields = this.disabledFields.filter((value) => !fieldValues.includes(value))
+  }
+
+  this.virtualList.updateItems(this.unselectedItems)
 }

@@ -20,13 +20,12 @@
   padding: 0;
 }
 
-.MultiSelectContainer:not(.Disabled) .PopoverBtn:hover img {
+.PopoverBtn:not(.Disabled):hover img {
   background-color: #DDE0E4;
   border-radius: 4px;
 }
 
-
-.MultiSelectContainer.Disabled .PopoverBtn {
+.PopoverBtn.Disabled {
   cursor: not-allowed;
 }
 
@@ -284,6 +283,11 @@
   text-align: left;
 }
 
+.MultiSelectList .VItem[disabled="true"] {
+  cursor: not-allowed;
+  color: #B5BDC1;
+}
+
 .MultiSelectList .VItem:hover {
   background: #F0F1FC;
   border-radius: 2px;
@@ -316,8 +320,8 @@
 }
 
 .ListFooter button:is(.Inactive) {
+  color: #B5BDC1;
   pointer-events: none;
-  opacity: 0.5;
 }
 
 .NoItemsMessage {
