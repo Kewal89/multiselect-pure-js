@@ -80,6 +80,7 @@ VirtualList.prototype.createRow = function (i) {
   item.classList.add("vrow")
   item.style.position = "absolute"
   item.style.top = i * this.itemHeight + "px"
+  item.style.height = this.itemHeight + "px"
   return item
 }
 

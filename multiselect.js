@@ -20,12 +20,17 @@ function MultiSelect(props) {
   this.placeholder = props.placeholder || "Select Options"
   this.disabled = props.disabled || false
   this.disabledFields = props.disabledFields || []
+  this.defaultSelected = props.defaultSelected || []
+  this.onChange = props.onChange || null
+  this.onOpen = props.onOpen || null
+  this.onClose = props.onClose || null
+  this.debug = props.debug || false
 
   // Internal Props Settings
   this.chipCollapse = true
 
   // Array to Store Selected & Unselected Items.
-  this.selectedItems = []
+  this.selectedItems = [] // Array.isArray(this.defaultSelected) ? this.itemList.filter(x => this.defaultSelected.includes(x[this.valueKey])) : []
   this.unselectedItems = Array.isArray(this.itemList) ? this.itemList.slice() : []
   // TODO: Handle This Error Properly As It May Crash Rest of The Code.
   if (!Array.isArray(this.itemList)) console.error("Item List should be an array.", this.root)
@@ -34,10 +39,20 @@ function MultiSelect(props) {
 }
 
 MultiSelect.prototype.initialize = function () {
+  this.prefillData()
   this.generateDOM()
   this.setupDOM()
   this.renderLists()
   this.setupEventListeners()
+}
+
+MultiSelect.prototype.prefillData = function () {
+  if (Array.isArray(this.defaultSelected) && this.defaultSelected.length > 0) {
+    this.itemList.map((x) => {
+      if (this.defaultSelected.includes(x[this.valueKey])) this.selectedItems.push(x)
+      else this.unselectedItems.push(x)
+    })
+  }
 }
 
 MultiSelect.prototype.generateDOM = function () {
@@ -69,7 +84,7 @@ MultiSelect.prototype.generateDOM = function () {
 
   // Popover Container & Content
   const popperContainer = document.createElement("div")
-  popperContainer.classList.add("PopperContainer", "Detach")
+  popperContainer.classList.add("PopperContainer")
 
   const popoverContent = document.createElement("div")
   popoverContent.classList.add("PopoverContent")
@@ -166,6 +181,8 @@ MultiSelect.prototype.setupDOM = function () {
     this.selectAllBtn = popperContainer.querySelector(".SelectAllBtn")
     this.clearAllBtn = popperContainer.querySelector(".ClearAllBtn")
   }
+
+  if (Array.isArray(this.defaultSelected) && this.defaultSelected.length > 0) this.handleBackDrop()
 }
 
 MultiSelect.prototype.setupEventListeners = function () {
@@ -176,12 +193,24 @@ MultiSelect.prototype.setupEventListeners = function () {
 
     if (!isOpen) {
       document.body.appendChild(self.popperContainer)
+      self.popperContainer.classList.add("Detached")
       self.positionPopoverContent()
+      if (self.onOpen) {
+        self.onOpen()
+      }
     }
 
     self.popoverContent.classList.toggle("Show", !isOpen)
     self.backdropElement.classList.toggle("Show", !isOpen)
+
+    if (self.virtualList) {
+      self.refreshList()
+    }
   }
+
+  // if (self.debug) {
+  //   TogglePopover()
+  // }
 
   // Handle click events using event delegation
 
@@ -225,24 +254,112 @@ MultiSelect.prototype.setupEventListeners = function () {
   })
 }
 
-MultiSelect.prototype.addTooltipToElement = function (element, content) {
+MultiSelect.prototype.addTooltipToElement = function (element, content, position = "topcenter") {
   const tooltip = document.createElement("div")
   tooltip.classList.add("Tooltip")
   tooltip.innerHTML = content
   tooltip.style.display = "none"
 
-  element.addEventListener("mouseenter", () => {
-    const rect = element.getBoundingClientRect()
-    const tooltipWidth = tooltip.offsetWidth
-    const tooltipHeight = tooltip.offsetHeight
+  var arrow = document.createElement("div")
+  arrow.classList.add("TooltipArrow")
+  tooltip.appendChild(arrow)
 
-    const tooltipX = rect.right + 8
-    const tooltipY = rect.top - tooltipHeight / 2 + rect.height / 2 - 10
+  element.addEventListener("mouseenter", () => {
+    tooltip.style.visibility = "hidden"
+    tooltip.style.display = "block"
+    document.body.appendChild(tooltip)
+    const rect = element.getBoundingClientRect()
+    const scrollY = window.scrollY || window.pageYOffset // Get the vertical scroll position
+    const scrollX = window.scrollX || window.pageXOffset // Get the horizontal scroll position
+    const itemHeight = element.offsetHeight
+    const tooltipRect = tooltip.getBoundingClientRect()
+    const tooltipWidth = tooltipRect.width
+    const tooltipHeight = tooltipRect.height
+
+    let tooltipX, tooltipY, arrowPositionLeft, arrowPositionTop, transform
+    const tooltipArrowSize = 10
+    if (position === "topright") {
+      tooltipX = rect.right - tooltipWidth / 2
+      tooltipY = rect.top + scrollY - (tooltipHeight + tooltipArrowSize) // + 10 for Arrow
+      arrowPositionLeft = "10%"
+      arrowPositionTop = "100%"
+      transform = "rotate(270deg)"
+    } else if (position === "topcenter") {
+      tooltipX = rect.left + scrollX + rect.width / 2 - tooltipWidth / 2
+      tooltipY = rect.top + scrollY - (tooltipHeight + tooltipArrowSize)
+      arrowPositionLeft = "50%"
+      arrowPositionTop = "100%"
+      transform = "rotate(270deg) translateY(-50%)"
+    } else if (position === "topleft") {
+      tooltipX = rect.left + scrollX
+      tooltipY = rect.top + scrollY - (tooltipHeight + tooltipArrowSize)
+      arrowPositionLeft = "10%"
+      arrowPositionTop = "100%"
+      transform = "rotate(270deg)"
+    } else if (position === "bottomright") {
+      tooltipX = rect.right - tooltipWidth / 2
+      tooltipY = rect.bottom + scrollY + tooltipArrowSize
+      arrowPositionLeft = "10%"
+      arrowPositionTop = "-11%"
+      transform = "rotate(90deg)"
+    } else if (position === "bottomcenter") {
+      tooltipX = rect.left + scrollX + rect.width / 2 - tooltipWidth / 2
+      tooltipY = rect.bottom + scrollY + tooltipArrowSize
+      arrowPositionLeft = "50%"
+      arrowPositionTop = "-11%"
+      transform = "rotate(270deg) translateY(-50%)"
+    } else if (position === "bottomleft") {
+      tooltipX = rect.left + scrollX - tooltipWidth / 2
+      tooltipY = rect.bottom + scrollY + tooltipArrowSize
+      arrowPositionLeft = "90%"
+      arrowPositionTop = "-11%"
+      transform = "rotate(90deg)"
+    } else if (position === "righttop") {
+      tooltipX = rect.right + tooltipArrowSize
+      tooltipY = rect.top + scrollY - tooltipHeight / 2
+      arrowPositionLeft = "-5px"
+      arrowPositionTop = "65%"
+    } else if (position === "rightcenter") {
+      tooltipX = rect.right + tooltipArrowSize
+      tooltipY = rect.top + scrollY + rect.height / 2 - tooltipHeight / 2
+      arrowPositionLeft = "-5px"
+      arrowPositionTop = "45%"
+    } else if (position === "rightbottom") {
+      tooltipX = rect.right + tooltipArrowSize
+      tooltipY = rect.bottom + scrollY - tooltipHeight / 2
+      arrowPositionLeft = "-5px"
+      arrowPositionTop = "15%"
+    } else if (position === "lefttop") {
+      tooltipX = rect.left - tooltipWidth - tooltipArrowSize
+      tooltipY = rect.top + scrollY - tooltipHeight / 2
+      arrowPositionLeft = "100%"
+      arrowPositionTop = "65%"
+      transform = "rotate(180deg)"
+    } else if (position === "leftcenter") {
+      tooltipX = rect.left - tooltipWidth - tooltipArrowSize
+      tooltipY = rect.top + scrollY + rect.height / 2 - tooltipHeight / 2
+      arrowPositionLeft = "100%"
+      arrowPositionTop = "45%"
+      transform = "rotate(180deg)"
+    } else if (position === "leftbottom") {
+      tooltipX = rect.left - tooltipWidth - tooltipArrowSize
+      tooltipY = rect.bottom + scrollY - tooltipHeight / 2
+      arrowPositionLeft = "100%"
+      arrowPositionTop = "25%"
+      transform = "rotate(180deg)"
+    }
 
     tooltip.style.left = tooltipX + "px"
     tooltip.style.top = tooltipY + "px"
-    tooltip.style.display = "block"
-    document.body.appendChild(tooltip)
+
+    var arrow = tooltip.querySelector(".TooltipArrow")
+    if (arrow) {
+      arrow.style.left = arrowPositionLeft
+      arrow.style.top = arrowPositionTop
+      arrow.style.transform = transform
+    }
+
+    tooltip.style.visibility = "visible"
   })
 
   element.addEventListener("click", () => {
@@ -274,20 +391,27 @@ MultiSelect.prototype.outerChipInjection = function () {
     outerContainer.appendChild(overflowChip)
 
     const tooltipContent = this.selectedItems.map((item) => item[this.labelKey]).join("\n")
-    this.addTooltipToElement(overflowChip, tooltipContent)
+    this.addTooltipToElement(overflowChip, tooltipContent, "rightbottom")
   }
 
   this.popoverBtn.appendChild(outerContainer)
 }
 
 MultiSelect.prototype.positionPopoverContent = function () {
-  // Calculate the position of the popover content relative to the popover button
   const targetRect = this.popoverBtn.getBoundingClientRect()
   const contentWidth = this.popoverContent.offsetWidth
   const contentHeight = this.popoverContent.offsetHeight
+  const scrollY = window.scrollY || window.pageYOffset
+  const scrollX = window.scrollX || window.pageXOffset
+  const viewportWidth = window.innerWidth
 
-  const contentX = targetRect.left
-  const contentY = targetRect.bottom + 4
+  let contentX = targetRect.left + scrollX
+
+  if (contentX + contentWidth > viewportWidth) {
+    contentX = viewportWidth - contentWidth
+  }
+
+  const contentY = targetRect.bottom + 4 + scrollY
 
   this.popoverContent.style.position = "absolute"
   this.popoverContent.style.left = contentX + "px"
@@ -298,6 +422,11 @@ MultiSelect.prototype.handleBackDrop = function () {
   console.info("Backdrop Triggered")
   this.popoverContent.classList.remove("Show")
   this.backdropElement.classList.remove("Show")
+  this.popperContainer.classList.remove("Detached")
+
+  if (this.onClose) {
+    this.onClose()
+  }
 
   // Remove popperContainer from body & add it to the root container
   this.popperContainer.remove()
@@ -354,9 +483,13 @@ MultiSelect.prototype.handleItemSelection = function (element) {
     if (this.searchInput.value.trim() !== "") {
       this.onSearch(false)
     } else {
-      this.virtualList.updateItems(this.unselectedItems)
+      this.refreshList()
       this.renderSelectedItems()
       this.handleNoItems()
+    }
+
+    if (this.onChange) {
+      this.onChange(this.selectedItems, this.unselectedItems)
     }
   }
 }
@@ -375,18 +508,23 @@ MultiSelect.prototype.handleItemUnselection = function (element) {
       this.selectedItems.splice(selectedItemIndex, 1)
 
       element.remove()
-      this.virtualList.updateItems(this.unselectedItems)
+      this.refreshList()
       this.renderSelectedItems()
       this.handleNoItems()
+
+      if (this.onChange) {
+        this.onChange(this.selectedItems, this.unselectedItems)
+      }
     }
   }
 }
 
-MultiSelect.prototype.renderLists = function () {
-  const currentScrollPosition = this.unselectedItemsContainer.scrollTop
-  const firstVisibleIndex = Math.floor(currentScrollPosition / 40)
-  console.info("Trigger Rendering :", this.disabledFields)
+var tempEl = ""
 
+MultiSelect.prototype.renderLists = function () {
+  // if (this.debug) {
+  //   tempEl = this.popoverContent.childNodes[1]
+  // }
   this.virtualList = new VirtualList({
     root: this.popoverContent,
     container: this.unselectedItemsContainer,
@@ -395,17 +533,19 @@ MultiSelect.prototype.renderLists = function () {
     items: this.unselectedItems,
     generatorFn: (index, row) => {
       const value = row[this.valueKey]
+      const label = row[this.labelKey]
 
       let el = document.createElement("div")
       el.classList.add("VItem")
-      el.innerHTML = row[this.labelKey]
+      el.innerHTML = label
       el.setAttribute("data-index", index)
       el.setAttribute("data-value", value)
+      el.setAttribute("title", label)
+      this.addTooltipToElement(el, label)
       if (this.disabledFields.includes(value)) el.setAttribute("disabled", true)
       return el
     },
   })
-  this.unselectedItemsContainer.scrollTop = firstVisibleIndex * 40
 
   this.virtualList.container.classList.add("VirtualListContainer")
 
@@ -444,7 +584,7 @@ MultiSelect.prototype.renderSelectedItems = function (isOuterChip = false) {
     containerItem.appendChild(overflowChip)
 
     const tooltipContent = overflowItems.map((item) => item[this.labelKey]).join("\n")
-    this.addTooltipToElement(overflowChip, tooltipContent)
+    this.addTooltipToElement(overflowChip, tooltipContent, "rightcenter")
   }
 }
 
@@ -454,7 +594,7 @@ MultiSelect.prototype.selectAllItems = function () {
   this.selectedItems = this.selectedItems.concat(this.unselectedItems)
   this.renderSelectedItems()
   this.unselectedItems = []
-  this.virtualList.updateItems(this.unselectedItems)
+  this.refreshList()
 
   this.handleNoItems()
 }
@@ -466,7 +606,7 @@ MultiSelect.prototype.clearAllItems = function () {
 
   this.unselectedItems = this.unselectedItems.concat(this.selectedItems)
   this.selectedItems = []
-  this.virtualList.updateItems(this.unselectedItems)
+  this.refreshList()
   this.renderSelectedItems()
   this.handleNoItems()
 }
@@ -500,7 +640,7 @@ MultiSelect.prototype.onSearch = function (throttle = true) {
 
   this.searchTimer = setTimeout(() => {
     const filterItems = this.unselectedItems.filter((x) => x?.[this.labelKey]?.toString().toLowerCase().includes(searchText))
-    this.virtualList.updateItems(filterItems)
+    this.refreshList(filterItems)
     this.renderSelectedItems()
     this.handleNoItems()
 
@@ -512,7 +652,7 @@ MultiSelect.prototype.onSearch = function (throttle = true) {
 }
 
 MultiSelect.prototype.handleNoItems = function () {
-  console.info("No Items :", this.virtualList.items.length, this.unselectedItemsContainer.querySelector(".NoItemsMessage"))
+  // console.info("No Items :", this.virtualList.items.length, this.unselectedItemsContainer.querySelector(".NoItemsMessage"))
   if (this.virtualList.items.length === 0) {
     const noItemsElement = document.createElement("div")
     noItemsElement.textContent = "No Items"
@@ -560,9 +700,39 @@ MultiSelect.prototype.setDisabledFields = function (fieldValues, isDisabled = tr
     this.disabledFields = this.disabledFields.filter((value) => !fieldValues.includes(value))
   }
 
-  this.virtualList.updateItems(this.unselectedItems)
+  this.refreshList()
 }
 
 MultiSelect.prototype.getDisabledFields = function () {
   return this.disabledFields
+}
+
+MultiSelect.prototype.setSelectedFields = function (values) {
+  if (!Array.isArray(values)) {
+    values = [values]
+  }
+
+  const updatedArray = this.unselectedItems.filter((item) => {
+    if (values.includes(item[this.valueKey])) {
+      this.selectedItems.push(item)
+      return false
+    }
+    return true
+  })
+  this.unselectedItems = [...updatedArray]
+
+  this.refreshList()
+  this.renderSelectedItems()
+}
+
+MultiSelect.prototype.getSelectedFields = function () {
+  return this.selectedItems.slice()
+}
+
+MultiSelect.prototype.refreshList = function (customList) {
+  let refreshArray = [...this.unselectedItems]
+  if (Array.isArray(customList)) {
+    refreshArray = [...customList]
+  }
+  this.virtualList.updateItems(refreshArray)
 }
