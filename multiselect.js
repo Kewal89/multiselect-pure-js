@@ -36,7 +36,7 @@ function MultiSelect(props) {
 
   // Array to Store Selected & Unselected Items.
   this.selectedItems = [] // Array.isArray(this.defaultSelected) ? this.itemList.filter(x => this.defaultSelected.includes(x[this.valueKey])) : []
-  this.unselectedItems = []
+  this.unselectedItems = Array.isArray(this.defaultSelected) && this.defaultSelected.length > 0 ? [] : [...this.itemList]
   // TODO: Handle This Error Properly As It May Crash Rest of The Code.
   if (!Array.isArray(this.itemList)) console.error("Item List should be an array.", this.root)
 
@@ -283,7 +283,7 @@ MultiSelect.prototype.setupEventListeners = function () {
   })
 }
 
-MultiSelect.prototype.addTooltipToElement = function (element, content, position = "topcenter") {
+MultiSelect.prototype.addTooltipToElement = function (element, content, position = "topcenter", parentElem) {
   const tooltip = document.createElement("div")
   tooltip.classList.add("Tooltip")
   tooltip.innerHTML = content
@@ -310,7 +310,6 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
     if (position === "topright") {
       tooltipX = rect.right - tooltipWidth / 2
       tooltipY = rect.top + scrollY - (tooltipHeight + tooltipArrowSize) // + 10 for Arrow
-      arrowPositionLeft = "10%"
       arrowPositionTop = "100%"
       transform = "rotate(270deg)"
     } else if (position === "topcenter") {
@@ -357,7 +356,6 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
       tooltipX = rect.right + tooltipArrowSize
       tooltipY = rect.top + scrollY - 12
       arrowPositionLeft = "-5px"
-      arrowPositionTop = "15%"
     } else if (position === "lefttop") {
       tooltipX = rect.left - tooltipWidth - tooltipArrowSize
       tooltipY = rect.top + scrollY - tooltipHeight / 2
@@ -421,7 +419,6 @@ MultiSelect.prototype.outerChipInjection = function () {
     outerContainer.appendChild(overflowChip)
 
     const tooltipContent = this.selectedItems.map((item) => item[this.labelKey]).join("\n")
-    this.addTooltipToElement(overflowChip, tooltipContent, "rightbottom")
   }
 
   this.popoverBtn.appendChild(outerContainer)
@@ -449,7 +446,7 @@ MultiSelect.prototype.positionPopoverContent = function () {
 }
 
 MultiSelect.prototype.handleBackDrop = function () {
-  console.info("Backdrop Triggered")
+  // console.info("Backdrop Triggered")
   this.popoverContent.classList.remove("Show")
   this.backdropElement.classList.remove("Show")
   this.popperContainer.classList.remove("Detached")
@@ -463,7 +460,7 @@ MultiSelect.prototype.handleBackDrop = function () {
   this.container.appendChild(this.popperContainer)
 
   const lastChild = this.popoverBtn.querySelector(".DropdownIconCont")
-  console.info("lastChild", lastChild)
+  // console.info("lastChild", lastChild)
 
   this.popoverBtn.textContent = ""
 
@@ -503,8 +500,6 @@ MultiSelect.prototype.handleItemSelection = function (element) {
       this.selectedItems.splice(0, 0, this.unselectedItems[selectedItemIndex])
       this.unselectedItems.splice(selectedItemIndex, 1)
     }
-
-    
 
     // Update UI - Move Items From Unselected to Selected Items VirtualList
     const selectedItemElement = document.createElement("div")
