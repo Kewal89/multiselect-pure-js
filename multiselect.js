@@ -7,17 +7,21 @@
 
 "use strict"
 
+const multiSelectInstances = new WeakMap()
+
 function MultiSelect(props) {
   // External Props Settings
   this.root = props.rootElement
   this.itemList = props.items
   this.height = props.height || 400
   this.collapseChipCount = props.collapseChipCount || 5
-  this.expandChipCount = props.expandChipCount || 50
+  this.expandChipCount = props.expandChipCount || 30
   this.mode = props.mode || "multi"
+  this.maxSelection = props.maxSelection || 30
   this.labelKey = props.labelKey || "label"
   this.valueKey = props.valueKey || "value"
   this.placeholder = props.placeholder || "Select Options"
+  this.selectAllExpose = props.selectAllExpose || false
   this.disabled = props.disabled || false
   this.disabledFields = props.disabledFields || []
   this.defaultSelected = props.defaultSelected || []
@@ -27,15 +31,17 @@ function MultiSelect(props) {
   this.debug = props.debug || false
 
   // Internal Props Settings
+  this.outerLabelCollapse = props.outerLabelCollapse || false
   this.chipCollapse = true
 
   // Array to Store Selected & Unselected Items.
   this.selectedItems = [] // Array.isArray(this.defaultSelected) ? this.itemList.filter(x => this.defaultSelected.includes(x[this.valueKey])) : []
-  this.unselectedItems = Array.isArray(this.itemList) ? this.itemList.slice() : []
+  this.unselectedItems = []
   // TODO: Handle This Error Properly As It May Crash Rest of The Code.
   if (!Array.isArray(this.itemList)) console.error("Item List should be an array.", this.root)
 
   this.initialize()
+  multiSelectInstances.set(this.rootContainer, this)
 }
 
 MultiSelect.prototype.initialize = function () {
@@ -53,6 +59,18 @@ MultiSelect.prototype.prefillData = function () {
       else this.unselectedItems.push(x)
     })
   }
+}
+
+MultiSelect.prototype.recalculateHeight = function () {
+  const isClearAll = this.popperContainer.querySelector(".ClearAllBtn")
+  if (isClearAll) {
+    if (this.selectedItems.length > 0) isClearAll.classList.remove("Inactive")
+    else isClearAll.classList.add("Inactive")
+  }
+
+  if (!this.chipCollapse || this.selectedItems.length < this.collapseChipCount) return false
+  const height = this.popperContainer.querySelector(".ChipsList").offsetHeight
+  this.unselectedItemsContainer.style.height = `${this.height - height}px`
 }
 
 MultiSelect.prototype.generateDOM = function () {
@@ -133,17 +151,27 @@ MultiSelect.prototype.generateDOM = function () {
     const listFooter = document.createElement("div")
     listFooter.classList.add("ListFooter")
 
-    const selectAllBtn = document.createElement("button")
-    selectAllBtn.type = "button"
-    selectAllBtn.classList.add("SelectAllBtn")
-    selectAllBtn.textContent = "Select All"
-    listFooter.appendChild(selectAllBtn)
+    if (this.selectAllExpose) {
+      const selectAllBtn = document.createElement("button")
+      selectAllBtn.type = "button"
+      selectAllBtn.classList.add("SelectAllBtn")
+      selectAllBtn.textContent = "Select All"
+      listFooter.appendChild(selectAllBtn)
+    } else {
+      const maxSelection = document.createElement("div")
+      maxSelection.classList.add("MaxSelection")
+      maxSelection.textContent = `Max Selected`
+      maxSelection.style.visibility = "hidden"
+      listFooter.appendChild(maxSelection)
+    }
 
     const clearAllBtn = document.createElement("button")
     clearAllBtn.type = "button"
     clearAllBtn.classList.add("ClearAllBtn")
     clearAllBtn.textContent = "Clear All"
     listFooter.appendChild(clearAllBtn)
+
+    listFooter.style.justifyContent = listFooter.childNodes.length === 1 ? "flex-end" : "space-between"
 
     popoverContent.appendChild(listFooter)
   }
@@ -178,7 +206,7 @@ MultiSelect.prototype.setupDOM = function () {
   this.backdropElement = popperContainer.querySelector(".Backdrop")
 
   if (this.mode === "multi") {
-    this.selectAllBtn = popperContainer.querySelector(".SelectAllBtn")
+    if (this.selectAllExpose) this.selectAllBtn = popperContainer.querySelector(".SelectAllBtn")
     this.clearAllBtn = popperContainer.querySelector(".ClearAllBtn")
   }
 
@@ -218,11 +246,12 @@ MultiSelect.prototype.setupEventListeners = function () {
     if (self.disabled) return
 
     console.info("event.target", event.target.classList, event.target.parentNode, event.target.parentNode.parentNode)
-    if (event.target.classList.contains("ChipOverflow")) {
-      const isOuterChip = event.target.classList.contains("OuterFlow")
-      self.chipCollapse = !self.chipCollapse
-      self.renderSelectedItems(isOuterChip)
-    } else if (event.target.closest(".PopoverBtn")) {
+    // if (event.target.classList.contains("ChipOverflow")) {
+    //   const isOuterChip = event.target.classList.contains("OuterFlow")
+    //   self.chipCollapse = !self.chipCollapse
+    //   if (!self.outerLabelCollapse) self.renderSelectedItems() // No Overflow
+    // } else
+    if (event.target.closest(".PopoverBtn")) {
       TogglePopover()
     }
   })
@@ -234,12 +263,12 @@ MultiSelect.prototype.setupEventListeners = function () {
     if (event.target.classList.contains("ChipOverflow")) {
       const isOuterChip = event.target.classList.contains("OuterFlow")
       self.chipCollapse = !self.chipCollapse
-      self.renderSelectedItems(isOuterChip)
-    } else if (event.target.classList.contains("VItem")) {
+      if (!self.outerLabelCollapse) self.renderSelectedItems() // No Overflow
+    } else if (event.target.classList.contains("VItem") && !event.target.closest(".ChipsList")) {
       self.handleItemSelection(event.target)
     } else if (event.target.classList.contains("VItemCrossIcon")) {
       self.handleItemUnselection(event.target.closest(".VItem"))
-    } else if (self.mode === "multi" && event.target === self.selectAllBtn) {
+    } else if (self.mode === "multi" && event.target === self.selectAllBtn && self.selectAllExpose) {
       self.selectAllItems()
     } else if (self.mode === "multi" && event.target === self.clearAllBtn) {
       self.clearAllItems()
@@ -323,10 +352,10 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
       tooltipX = rect.right + tooltipArrowSize
       tooltipY = rect.top + scrollY + rect.height / 2 - tooltipHeight / 2
       arrowPositionLeft = "-5px"
-      arrowPositionTop = "45%"
+      arrowPositionTop = `${rect.height / 2 - tooltipHeight / 2}px}`
     } else if (position === "rightbottom") {
       tooltipX = rect.right + tooltipArrowSize
-      tooltipY = rect.bottom + scrollY - tooltipHeight / 2
+      tooltipY = rect.top + scrollY - 12
       arrowPositionLeft = "-5px"
       arrowPositionTop = "15%"
     } else if (position === "lefttop") {
@@ -368,6 +397,7 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
   })
 
   element.addEventListener("mouseleave", () => {
+    if (element.classList.contains("OuterFlow")) return
     tooltip.style.display = "none"
     tooltip.remove()
   })
@@ -381,7 +411,7 @@ MultiSelect.prototype.outerChipInjection = function () {
 
   const selectedItemElement = document.createElement("div")
   selectedItemElement.classList.add("VItem")
-  selectedItemElement.innerHTML = `<span class="VItemLabel">${this.selectedItems[0][this.labelKey]}</span>`
+  selectedItemElement.innerHTML = `<span class="VItemLabel" title="${this.selectedItems[0][this.labelKey]}">${this.selectedItems[0][this.labelKey]}</span>`
   outerContainer.appendChild(selectedItemElement)
 
   if (this.selectedItems.length > 1) {
@@ -450,6 +480,8 @@ MultiSelect.prototype.handleBackDrop = function () {
 }
 
 MultiSelect.prototype.handleItemSelection = function (element) {
+  if (this.selectedItems.length >= this.maxSelection) return
+
   const selectedItemText = element.textContent.trim()
   const selectedItemIndex = this.unselectedItems.findIndex((x) => x[this.labelKey] === selectedItemText)
   const selectedItemValue = this.unselectedItems[selectedItemIndex][this.valueKey]
@@ -461,13 +493,18 @@ MultiSelect.prototype.handleItemSelection = function (element) {
   if (selectedItemIndex !== -1) {
     // Move Item From Unselected to Selected Items List
     if (this.mode === "single") {
+      const prev = [...this.selectedItems]
       this.selectedItems = [this.unselectedItems[selectedItemIndex]] // Single select mode
+      this.unselectedItems.splice(selectedItemIndex, 1)
+      this.unselectedItems.unshift(prev[0])
+      console.info("prev :", prev[0])
       this.handleBackDrop()
     } else {
       this.selectedItems.splice(0, 0, this.unselectedItems[selectedItemIndex])
+      this.unselectedItems.splice(selectedItemIndex, 1)
     }
 
-    this.unselectedItems.splice(selectedItemIndex, 1)
+    
 
     // Update UI - Move Items From Unselected to Selected Items VirtualList
     const selectedItemElement = document.createElement("div")
@@ -522,9 +559,6 @@ MultiSelect.prototype.handleItemUnselection = function (element) {
 var tempEl = ""
 
 MultiSelect.prototype.renderLists = function () {
-  // if (this.debug) {
-  //   tempEl = this.popoverContent.childNodes[1]
-  // }
   this.virtualList = new VirtualList({
     root: this.popoverContent,
     container: this.unselectedItemsContainer,
@@ -546,7 +580,9 @@ MultiSelect.prototype.renderLists = function () {
       return el
     },
   })
-
+  if (this.debug) {
+    tempEl = this
+  }
   this.virtualList.container.classList.add("VirtualListContainer")
 
   this.handleNoItems()
@@ -565,7 +601,7 @@ MultiSelect.prototype.renderSelectedItems = function (isOuterChip = false) {
   for (let i = 0; i < Math.min(this.selectedItems.length, collapseLimit); i++) {
     const selectedItemElement = document.createElement("div")
     selectedItemElement.classList.add("VItem")
-    selectedItemElement.innerHTML = `<span class="VItemLabel">${this.selectedItems[i][this.labelKey]}</span>`
+    selectedItemElement.innerHTML = `<span class="VItemLabel" title="${this.selectedItems[0][this.labelKey]}">${this.selectedItems[i][this.labelKey]}</span>`
     if (!isOuterChip) {
       const crossIcon = document.createElement("img")
       crossIcon.classList.add("VItemCrossIcon")
@@ -584,12 +620,12 @@ MultiSelect.prototype.renderSelectedItems = function (isOuterChip = false) {
     containerItem.appendChild(overflowChip)
 
     const tooltipContent = overflowItems.map((item) => item[this.labelKey]).join("\n")
-    this.addTooltipToElement(overflowChip, tooltipContent, "rightcenter")
+    // this.addTooltipToElement(overflowChip, tooltipContent, "rightcenter")
   }
 }
 
 MultiSelect.prototype.selectAllItems = function () {
-  if (this.selectedItems.length === this.itemList.length) return
+  if (this.selectedItems.length === this.itemList.length || !this.selectAllExpose) return
 
   this.selectedItems = this.selectedItems.concat(this.unselectedItems)
   this.renderSelectedItems()
@@ -604,7 +640,7 @@ MultiSelect.prototype.clearAllItems = function () {
 
   if (this.unselectedItems.length === this.itemList.length) return
 
-  this.unselectedItems = this.unselectedItems.concat(this.selectedItems)
+  this.unselectedItems = [...this.selectedItems, ...this.unselectedItems]
   this.selectedItems = []
   this.refreshList()
   this.renderSelectedItems()
@@ -670,13 +706,13 @@ MultiSelect.prototype.handleNoItems = function () {
       this.unselectedItemsContainer.appendChild(noItemsElement)
       this.unselectedItemsContainer.style.height = "auto"
       this.unselectedItemsContainer.classList.add("NoItems")
-      if (this.mode === "multi") {
+      if (this.mode === "multi" && this.selectAllExpose) {
         this.selectAllBtn.classList.add("Inactive")
       }
     }, 150)
   } else if (this.virtualList.items.length !== 0) {
-    this.unselectedItemsContainer.style.height = this.height + "px"
-    if (this.mode === "multi") {
+    this.recalculateHeight()
+    if (this.mode === "multi" && this.selectAllExpose) {
       this.selectAllBtn.classList.remove("Inactive")
     }
   }
@@ -735,4 +771,69 @@ MultiSelect.prototype.refreshList = function (customList) {
     refreshArray = [...customList]
   }
   this.virtualList.updateItems(refreshArray)
+
+  const maxSelection = this.popoverContent.querySelector(".MaxSelection")
+  if (maxSelection) {
+    if (this.selectedItems.length >= this.maxSelection) maxSelection.style.visibility = "visible"
+    else maxSelection.style.visibility = "hidden"
+  }
 }
+
+window.MultiSelectLibrary = (function () {
+  const notMyKid = "Never Initiated This Instance. Not My Problem."
+
+  return {
+    getSelectedFields: (element) => {
+      if (typeof element === "string") {
+        const instance = multiSelectInstances.get(document.querySelector(element))
+        return instance ? instance.getSelectedFields() : console.error(notMyKid)
+      }
+    },
+    setSelectedFields: (element, values) => {
+      if (typeof element === "string" && values) {
+        const instance = multiSelectInstances.get(document.querySelector(element))
+        if (instance) {
+          instance.setSelectedFields(values)
+          instance.handleBackDrop()
+        } else {
+          console.error(notMyKid)
+        }
+      }
+    },
+    setDisabledFields: (element, values, isDisabled = true) => {
+      if (typeof element === "string" && values) {
+        const instance = multiSelectInstances.get(document.querySelector(element))
+        instance ? instance.setDisabledFields(values, isDisabled) : console.error(notMyKid)
+      }
+    },
+    setDisabled: (element, isDisabled = true) => {
+      if (typeof element === "string") {
+        const instance = multiSelectInstances.get(document.querySelector(element))
+        instance ? instance.setDisabled(isDisabled) : console.error(notMyKid)
+      }
+    },
+    selectAll: (element) => {
+      if (!instance.selectAllExpose) return console.error("Select All Ain't Exposed")
+      if (typeof element === "string") {
+        const instance = multiSelectInstances.get(document.querySelector(element))
+        if (instance) {
+          instance.selectAllItems()
+          instance.handleBackDrop()
+        } else {
+          console.error(notMyKid)
+        }
+      }
+    },
+    clearAll: (element) => {
+      if (typeof element === "string") {
+        const instance = multiSelectInstances.get(document.querySelector(element))
+        if (instance) {
+          instance.clearAllItems()
+          instance.handleBackDrop()
+        } else {
+          console.error(notMyKid)
+        }
+      }
+    },
+  }
+})()

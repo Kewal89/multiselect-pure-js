@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+    <script src=" https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js "></script>
   </head>
 
   <body style="display: flex; flex-wrap: wrap; gap: 50px; margin: 50px;height: 200vh;width: 150vw;">
@@ -25,7 +26,7 @@
     <!-- <button onclick="GetItems1()">Get Values 1</button> -->
     <!-- <button onclick="GetItems2()">Get Values 2</button> -->
 
-    <script type="text/javascript" src="./multiselect.js"></script>
+    <script type="text/javascript" src="./multiselect.js"></script> 
 
     <script async>
       var multiSelect1,
@@ -122,9 +123,7 @@
           rootElement: ".MultiSelectContainer_1",
           labelKey: "vendorName",
           valueKey: "vendorApplicationId",
-          expandChipCount: 7,
-          defaultSelected: [372, 425, 482, 136, 193, 243, 280],
-          debug: true
+          defaultSelected: [372, 425, 482, 136, 193, 243, 280]
         })
         multiSelect2 = new MultiSelect({
           items: itemList2,
@@ -151,6 +150,9 @@
         multiSelect4 = new MultiSelect({
           items: itemList4,
           rootElement: ".MultiSelectContainer_4",
+          mode: "single",
+          defaultSelected: [0],
+          debug: true
         })
         multiSelect5 = new MultiSelect({
           items: itemList1,

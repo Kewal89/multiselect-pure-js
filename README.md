@@ -5,7 +5,7 @@ Multi Select with Virtual List
 ## TODO
 
 - [ ] Custom Render Label.
-- [ ] jQuery Like Global Data Manipulation (Extraction / Deletion).
+- [x] jQuery Like Global Data Manipulation (Extraction / Deletion).
 - [x] Popup Overflow Issue
 - [x] Placeholder Text Configs
 - [x] Disable Field
