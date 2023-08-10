@@ -106,6 +106,7 @@ VirtualList.createContainer = function (t, w, h) {
   var c = t ?? document.createElement("div")
   c.style.width = w
   c.style.height = h
+  c.style.minHeight = 100 + "px"
   c.style.overflow = "auto"
   c.style.position = "relative"
   c.style.padding = 0

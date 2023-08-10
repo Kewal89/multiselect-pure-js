@@ -39,6 +39,10 @@ function MultiSelect(props) {
   this.unselectedItems = Array.isArray(this.defaultSelected) && this.defaultSelected.length > 0 ? [] : [...this.itemList]
   // TODO: Handle This Error Properly As It May Crash Rest of The Code.
   if (!Array.isArray(this.itemList)) console.error("Item List should be an array.", this.root)
+  if (this.mode === "single" && this.defaultSelected.length > 1) {
+    this.defaultSelected = [this.defaultSelected[0]]
+    console.error("Single Select Accepts only 1 value in defaultSelected")
+  }
 
   this.initialize()
   multiSelectInstances.set(this.rootContainer, this)
@@ -68,9 +72,12 @@ MultiSelect.prototype.recalculateHeight = function () {
     else isClearAll.classList.add("Inactive")
   }
 
-  if (!this.chipCollapse || this.selectedItems.length < this.collapseChipCount) return false
-  const height = this.popperContainer.querySelector(".ChipsList").offsetHeight
-  this.unselectedItemsContainer.style.height = `${this.height - height}px`
+  if (!this.chipCollapse) return false
+  var height = 400
+  if (this.itemList.length < 10) height = this.itemList.length * 40
+  else height = this.height - this.popperContainer.querySelector(".ChipsList").offsetHeight
+
+  this.unselectedItemsContainer.style.height = `${height}px`
 }
 
 MultiSelect.prototype.generateDOM = function () {
@@ -232,7 +239,7 @@ MultiSelect.prototype.setupEventListeners = function () {
     self.backdropElement.classList.toggle("Show", !isOpen)
 
     if (self.virtualList) {
-      self.refreshList()
+      // self.refreshList()
     }
   }
 
@@ -266,7 +273,7 @@ MultiSelect.prototype.setupEventListeners = function () {
       if (!self.outerLabelCollapse) self.renderSelectedItems() // No Overflow
     } else if (event.target.classList.contains("VItem") && !event.target.closest(".ChipsList")) {
       self.handleItemSelection(event.target)
-    } else if (event.target.classList.contains("VItemCrossIcon")) {
+    } else if (event.target.classList.contains("VItemCrossIcon") && self.mode === "multi") {
       self.handleItemUnselection(event.target.closest(".VItem"))
     } else if (self.mode === "multi" && event.target === self.selectAllBtn && self.selectAllExpose) {
       self.selectAllItems()
@@ -305,11 +312,26 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
     const tooltipWidth = tooltipRect.width
     const tooltipHeight = tooltipRect.height
 
-    let tooltipX, tooltipY, arrowPositionLeft, arrowPositionTop, transform
+    let tooltipX, tooltipY, arrowPositionLeft, arrowPositionTop, transform, relativeRect
+    let parentRect = parentElem ? parentElem.getBoundingClientRect() : undefined
+    if (parentRect) {
+      relativeRect = {
+        top: rect.top - parentRect.top,
+        left: rect.left - parentRect.left,
+        right: rect.right - parentRect.left,
+        bottom: rect.bottom - parentRect.top,
+        width: rect.width,
+        height: rect.height,
+      }
+    }
+
+    // console.info("Hover Parent :", parentRect, "\nChild Element :", rect,  "\nRelative Child :", relativeRect,"\nTooltip :", tooltipRect)
+    console.info("Values :", relativeRect, rect)
     const tooltipArrowSize = 10
     if (position === "topright") {
       tooltipX = rect.right - tooltipWidth / 2
       tooltipY = rect.top + scrollY - (tooltipHeight + tooltipArrowSize) // + 10 for Arrow
+      arrowPositionLeft = "50%"
       arrowPositionTop = "100%"
       transform = "rotate(270deg)"
     } else if (position === "topcenter") {
@@ -348,7 +370,7 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
       arrowPositionLeft = "-5px"
       arrowPositionTop = "65%"
     } else if (position === "rightcenter") {
-      tooltipX = rect.right + tooltipArrowSize
+      tooltipX = rect.right + tooltipArrowSize + 5
       tooltipY = rect.top + scrollY + rect.height / 2 - tooltipHeight / 2
       arrowPositionLeft = "-5px"
       arrowPositionTop = `${rect.height / 2 - tooltipHeight / 2}px}`
@@ -356,6 +378,7 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
       tooltipX = rect.right + tooltipArrowSize
       tooltipY = rect.top + scrollY - 12
       arrowPositionLeft = "-5px"
+      arrowPositionTop = parentElem ? `${parentRect.height / 2 - 5}px` : `${rect.height / 2}px`
     } else if (position === "lefttop") {
       tooltipX = rect.left - tooltipWidth - tooltipArrowSize
       tooltipY = rect.top + scrollY - tooltipHeight / 2
@@ -395,7 +418,7 @@ MultiSelect.prototype.addTooltipToElement = function (element, content, position
   })
 
   element.addEventListener("mouseleave", () => {
-    if (element.classList.contains("OuterFlow")) return
+    // if (element.classList.contains("OuterFlow")) return
     tooltip.style.display = "none"
     tooltip.remove()
   })
@@ -418,7 +441,8 @@ MultiSelect.prototype.outerChipInjection = function () {
     overflowChip.textContent = "+" + (this.selectedItems.length - 1)
     outerContainer.appendChild(overflowChip)
 
-    const tooltipContent = this.selectedItems.map((item) => item[this.labelKey]).join("\n")
+    const tooltipContent = this.selectedItems.slice(1).map((item) => item[this.labelKey]).join("\n")
+    this.addTooltipToElement(overflowChip, tooltipContent, "rightbottom", this.popoverBtn)
   }
 
   this.popoverBtn.appendChild(outerContainer)
@@ -481,20 +505,21 @@ MultiSelect.prototype.handleItemSelection = function (element) {
 
   const selectedItemText = element.textContent.trim()
   const selectedItemIndex = this.unselectedItems.findIndex((x) => x[this.labelKey] === selectedItemText)
-  const selectedItemValue = this.unselectedItems[selectedItemIndex][this.valueKey]
-
-  if (this.disabledFields.includes(selectedItemValue)) {
-    return // Disable selection
-  }
 
   if (selectedItemIndex !== -1) {
+    const selectedItemValue = this.unselectedItems[selectedItemIndex][this.valueKey]
+
+    if (this.disabledFields.includes(selectedItemValue)) {
+      return // Disable selection
+    }
+
     // Move Item From Unselected to Selected Items List
     if (this.mode === "single") {
-      const prev = [...this.selectedItems]
+      const prev = this.selectedItems.length > 0 ? [...this.selectedItems][0] : ""
       this.selectedItems = [this.unselectedItems[selectedItemIndex]] // Single select mode
       this.unselectedItems.splice(selectedItemIndex, 1)
-      this.unselectedItems.unshift(prev[0])
-      console.info("prev :", prev[0])
+      if (prev) this.unselectedItems.unshift(prev)
+      console.info("prev :", prev)
       this.handleBackDrop()
     } else {
       this.selectedItems.splice(0, 0, this.unselectedItems[selectedItemIndex])
@@ -507,6 +532,7 @@ MultiSelect.prototype.handleItemSelection = function (element) {
     selectedItemElement.innerHTML = `<span class="VItemLabel">${selectedItemText}</span>`
     const crossIcon = document.createElement("img")
     crossIcon.classList.add("VItemCrossIcon")
+    crossIcon.style.display = this.mode === "single" ? "none" : "block"
     crossIcon.src = "./assets/cross.svg"
     selectedItemElement.appendChild(crossIcon)
     this.selectedItemsContainer.appendChild(selectedItemElement)
@@ -600,6 +626,7 @@ MultiSelect.prototype.renderSelectedItems = function (isOuterChip = false) {
     if (!isOuterChip) {
       const crossIcon = document.createElement("img")
       crossIcon.classList.add("VItemCrossIcon")
+      crossIcon.style.display = this.mode === "single" ? "none" : "block"
       crossIcon.src = "./assets/cross.svg"
       selectedItemElement.appendChild(crossIcon)
     }

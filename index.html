@@ -52,7 +52,7 @@
           }
         })
 
-        const itemList3 = Array.from({ length: 100000 }, (_, i) => {
+        const itemList3 = Array.from({ length: 2 }, (_, i) => {
           return {
             index: i,
             label: `Item ${i}`,
@@ -134,14 +134,15 @@
           items: itemList3,
           rootElement: ".MultiSelectContainer_3",
           disabledFields: [31, 32, 33, 34],
-          defaultSelected: [0, 1, 2, 3, 4, 5, 6],
+          defaultSelected: [0, 1, 2, 3, 4, 5],
+          mode: "single",
+          debug: true,
         })
         multiSelect4 = new MultiSelect({
           items: itemList4,
           rootElement: ".MultiSelectContainer_4",
           mode: "single",
           defaultSelected: [0],
-          debug: true,
         })
         multiSelect5 = new MultiSelect({
           items: itemList3,

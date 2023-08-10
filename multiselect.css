@@ -319,9 +319,9 @@
   color: #B5BDC1;
 }
 
-.MultiSelectList .VItem:last-child:hover {
+/* .MultiSelectList .VItem:last-child:hover {
   border-radius: 0 0 8px 8px;
-}
+} */
 
 .MultiSelectList .VItem:hover {
   background: #E7E9EA;
