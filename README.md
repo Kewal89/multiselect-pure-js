@@ -4,7 +4,7 @@ Multi Select with Virtual List
 
 ## TODO
 
-- [ ] Custom Render Label.
+- [-] Custom Render Label.
 - [x] jQuery Like Global Data Manipulation (Extraction / Deletion).
 - [x] Popup Overflow Issue
 - [x] Placeholder Text Configs
@@ -17,7 +17,7 @@ Multi Select with Virtual List
 - [x] onChange Event.
 - [x] onClose Event.
 - [x] onOpen Event.
-- [ ] Remove Fields.
+- [-] Remove Fields.
 - [x] Get Fields.
 - [x] Set Fields.
 - [x] Get Disabled Individual Fields.
